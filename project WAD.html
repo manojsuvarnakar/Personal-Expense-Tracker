@@ -1,0 +1,441 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Expense Tracker</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.container {
+    max-width: 950px;
+    margin: auto;
+}
+
+header {
+    background: #2563eb;
+    color: white;
+    padding: 25px;
+    border-radius: 14px;
+    text-align: center;
+}
+
+header p {
+    margin-bottom: 0;
+}
+
+.summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.card, .panel {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #0000000a;
+}
+
+.card h3 {
+    margin: 0 0 12px;
+    color: #64748b;
+    font-size: 16px;
+}
+
+.amount {
+    font-size: 27px;
+    font-weight: bold;
+    color: #2563eb;
+    overflow-wrap: anywhere;
+}
+
+.panel {
+    margin-bottom: 20px;
+}
+
+h2 {
+    margin-top: 0;
+}
+
+form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: bold;
+}
+
+input, select, button {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+button {
+    border: none;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    opacity: 0.88;
+}
+
+.full {
+    grid-column: 1 / -1;
+}
+
+.category-row {
+    margin: 16px 0;
+}
+
+.category-info {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 7px;
+}
+
+.bar {
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.fill {
+    height: 100%;
+    background: #2563eb;
+    border-radius: 10px;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 500px;
+}
+
+th, td {
+    padding: 13px 10px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+th {
+    color: #475569;
+    background: #f8fafc;
+}
+
+.delete {
+    background: #dc2626;
+    padding: 8px 10px;
+    width: auto;
+}
+
+.empty {
+    text-align: center;
+    padding: 25px;
+    color: #64748b;
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 12px;
+    }
+
+    form, .summary {
+        grid-template-columns: 1fr;
+    }
+
+    .full {
+        grid-column: auto;
+    }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+    <h1>💰 Personal Expense Tracker</h1>
+    <p>Track your daily spending and manage your money</p>
+</header>
+
+<div class="summary">
+    <div class="card">
+        <h3>Total Expenses</h3>
+        <div class="amount" id="total">₹0.00</div>
+    </div>
+
+    <div class="card">
+        <h3>Total Transactions</h3>
+        <div class="amount" id="count">0</div>
+    </div>
+</div>
+
+<section class="panel">
+    <h2>Add New Expense</h2>
+
+    <form id="expenseForm">
+        <div>
+            <label for="title">Expense Name</label>
+            <input id="title" type="text"
+                   placeholder="e.g. Lunch" required>
+        </div>
+
+        <div>
+            <label for="amount">Amount (₹)</label>
+            <input id="amount" type="number"
+                   min="0.01" step="0.01"
+                   placeholder="e.g. 150" required>
+        </div>
+
+        <div>
+            <label for="category">Category</label>
+            <select id="category" required>
+                <option value="Food">Food</option>
+                <option value="Travel">Travel</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Education">Education</option>
+                <option value="Bills">Bills</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="date">Date</label>
+            <input id="date" type="date" required>
+        </div>
+
+        <button class="full" type="submit">
+            + Add Expense
+        </button>
+    </form>
+</section>
+
+<section class="panel">
+    <h2>Category-wise Summary</h2>
+    <div id="categories"></div>
+</section>
+
+<section class="panel">
+    <h2>Expense History</h2>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="history"></tbody>
+        </table>
+    </div>
+
+    <p id="empty" class="empty">No expenses added yet.</p>
+</section>
+
+</div>
+
+<script>
+const categories = [
+    "Food", "Travel", "Shopping",
+    "Education", "Bills", "Other"
+];
+
+const form = document.getElementById("expenseForm");
+const titleInput = document.getElementById("title");
+const amountInput = document.getElementById("amount");
+const categoryInput = document.getElementById("category");
+const dateInput = document.getElementById("date");
+
+const today = new Date();
+dateInput.value =
+    `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+let expenses = [];
+
+try {
+    const saved = JSON.parse(
+        localStorage.getItem("personalExpenses") || "[]"
+    );
+
+    if (Array.isArray(saved)) {
+        expenses = saved.filter(e =>
+            e && typeof e.id === "string" &&
+            typeof e.title === "string" &&
+            Number.isFinite(e.amount) && e.amount > 0 &&
+            categories.includes(e.category) &&
+            typeof e.date === "string"
+        );
+    }
+} catch {
+    expenses = [];
+}
+
+function money(value) {
+    return value.toLocaleString("en-IN", {
+        style: "currency",
+        currency: "INR"
+    });
+}
+
+function saveExpenses() {
+    try {
+        localStorage.setItem(
+            "personalExpenses",
+            JSON.stringify(expenses)
+        );
+    } catch {
+        alert("Could not save data in this browser.");
+    }
+}
+
+form.addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const title = titleInput.value.trim();
+    const amount = Number(amountInput.value);
+    const category = categoryInput.value;
+    const date = dateInput.value;
+
+    if (!title || !Number.isFinite(amount) ||
+        amount <= 0 || !date ||
+        !categories.includes(category)) {
+        alert("Please enter valid expense details.");
+        return;
+    }
+
+    expenses.push({
+        id: crypto.randomUUID(),
+        title,
+        amount,
+        category,
+        date
+    });
+
+    saveExpenses();
+    form.reset();
+    dateInput.value =
+        `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    render();
+});
+
+function deleteExpense(id) {
+    expenses = expenses.filter(e => e.id !== id);
+    saveExpenses();
+    render();
+}
+
+function render() {
+    const total = expenses.reduce(
+        (sum, e) => sum + e.amount, 0
+    );
+
+    document.getElementById("total").textContent = money(total);
+    document.getElementById("count").textContent = expenses.length;
+
+    const categoryBox = document.getElementById("categories");
+    categoryBox.replaceChildren();
+
+    categories.forEach(category => {
+        const sum = expenses
+            .filter(e => e.category === category)
+            .reduce((value, e) => value + e.amount, 0);
+
+        const row = document.createElement("div");
+        row.className = "category-row";
+
+        const info = document.createElement("div");
+        info.className = "category-info";
+
+        const name = document.createElement("span");
+        name.textContent = category;
+
+        const value = document.createElement("strong");
+        value.textContent = money(sum);
+
+        info.append(name, value);
+
+        const bar = document.createElement("div");
+        bar.className = "bar";
+
+        const fill = document.createElement("div");
+        fill.className = "fill";
+        fill.style.width =
+            `${total > 0 ? (sum / total) * 100 : 0}%`;
+
+        bar.append(fill);
+        row.append(info, bar);
+        categoryBox.append(row);
+    });
+
+    const history = document.getElementById("history");
+    history.replaceChildren();
+
+    const sorted = [...expenses].sort((a, b) =>
+        b.date.localeCompare(a.date)
+    );
+
+    sorted.forEach(e => {
+        const tr = document.createElement("tr");
+
+        [e.date, e.title, e.category, money(e.amount)]
+            .forEach(text => {
+                const td = document.createElement("td");
+                td.textContent = text;
+                tr.append(td);
+            });
+
+        const action = document.createElement("td");
+        const button = document.createElement("button");
+        button.className = "delete";
+        button.textContent = "Delete";
+        button.type = "button";
+        button.addEventListener("click", () => deleteExpense(e.id));
+
+        action.append(button);
+        tr.append(action);
+        history.append(tr);
+    });
+
+    document.getElementById("empty").hidden =
+        expenses.length > 0;
+}
+
+render();
+</script>
+</body>
+</html>
